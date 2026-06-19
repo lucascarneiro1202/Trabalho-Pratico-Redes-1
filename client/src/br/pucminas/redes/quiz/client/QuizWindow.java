@@ -3,14 +3,12 @@ package br.pucminas.redes.quiz.client;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class QuizWindow extends JFrame implements ClientSocketManager.GameEventListener {
 
-    // Cores modernas (tema escuro/pastel)
+    // Cores modernas (tema escuro/pastel lúdico inspirado no Kahoot/Dracula)
     private static final Color BG_DARK = new Color(30, 30, 46);
     private static final Color CARD_BG = new Color(45, 47, 72);
     private static final Color TEXT_WHITE = new Color(255, 255, 255);
@@ -19,14 +17,19 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
     private static final Color SUCCESS_GREEN = new Color(166, 227, 161);
     private static final Color DANGER_RED = new Color(243, 139, 168);
     private static final Color BUTTON_BG = new Color(49, 50, 68);
-    private static final Color BUTTON_HOVER = new Color(69, 71, 90);
+
+    // Cores das 4 Alternativas (Kahoot Colors)
+    private static final Color RED_COLOR = new Color(226, 27, 60);
+    private static final Color BLUE_COLOR = new Color(19, 104, 206);
+    private static final Color YELLOW_COLOR = new Color(216, 158, 0);
+    private static final Color GREEN_COLOR = new Color(38, 137, 12);
 
     // Fontes
-    private static final Font FONT_TITLE = new Font("SansSerif", Font.BOLD, 26);
+    private static final Font FONT_TITLE = new Font("SansSerif", Font.BOLD, 28);
     private static final Font FONT_SUBTITLE = new Font("SansSerif", Font.BOLD, 18);
     private static final Font FONT_BODY = new Font("SansSerif", Font.PLAIN, 14);
     private static final Font FONT_LABEL = new Font("SansSerif", Font.BOLD, 12);
-    private static final Font FONT_TIMER = new Font("SansSerif", Font.BOLD, 36);
+    private static final Font FONT_TIMER = new Font("SansSerif", Font.BOLD, 80); // Tamanho monumental
 
     private CardLayout cardLayout;
     private JPanel mainPanel;
@@ -49,7 +52,7 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
     private JLabel lblResultFeedback;
     private JList<String> listLeaderboard;
     private DefaultListModel<String> leaderboardModel;
-    private JButton btnNextMock;
+    private JButton btnNextRound;
 
     // Controlador de Rede
     private ClientSocketManager socketManager;
@@ -57,7 +60,7 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
 
     public QuizWindow() {
         setTitle("Quiz em Tempo Real - Redes I");
-        setSize(800, 600);
+        setSize(850, 650);
         setMinimumSize(new Dimension(640, 480));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -102,16 +105,12 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Container Centralizado (Card)
-        JPanel card = new JPanel(new GridBagLayout());
-        card.setBackground(CARD_BG);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(ACCENT_BLUE, 1),
-                new EmptyBorder(30, 40, 30, 40)
-        ));
+        // Container Centralizado (Card Arredondado)
+        RoundedPanel card = new RoundedPanel(new GridBagLayout(), CARD_BG);
+        card.setBorder(new EmptyBorder(40, 50, 40, 50));
 
         GridBagConstraints cGbc = new GridBagConstraints();
-        cGbc.insets = new Insets(8, 8, 8, 8);
+        cGbc.insets = new Insets(10, 10, 10, 10);
         cGbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Título do Quiz
@@ -142,8 +141,8 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         cGbc.gridwidth = 2;
         card.add(lblName, cGbc);
 
-        txtName = new JTextField("Jogador 1");
-        styleTextField(txtName);
+        txtName = new RoundedTextField("Jogador 1", BUTTON_BG);
+        txtName.setFont(FONT_BODY);
         cGbc.gridy = 4;
         card.add(txtName, cGbc);
 
@@ -155,8 +154,8 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         cGbc.gridwidth = 1;
         card.add(lblIP, cGbc);
 
-        txtIP = new JTextField("127.0.0.1");
-        styleTextField(txtIP);
+        txtIP = new RoundedTextField("127.0.0.1", BUTTON_BG);
+        txtIP.setFont(FONT_BODY);
         cGbc.gridy = 6;
         card.add(txtIP, cGbc);
 
@@ -168,19 +167,20 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         cGbc.gridy = 5;
         card.add(lblPort, cGbc);
 
-        txtPort = new JTextField("12345");
-        styleTextField(txtPort);
+        txtPort = new RoundedTextField("12345", BUTTON_BG);
+        txtPort.setFont(FONT_BODY);
         cGbc.gridx = 1;
         cGbc.gridy = 6;
         card.add(txtPort, cGbc);
 
-        // Botão Conectar
-        btnConnect = new JButton("Conectar e Jogar");
-        styleButton(btnConnect, ACCENT_BLUE, BG_DARK);
+        // Botão Conectar (Rounded)
+        btnConnect = new RoundedButton("Conectar e Jogar", ACCENT_BLUE);
+        btnConnect.setForeground(BG_DARK);
+        btnConnect.setFont(FONT_SUBTITLE);
         cGbc.gridx = 0;
         cGbc.gridy = 7;
         cGbc.gridwidth = 2;
-        cGbc.insets = new Insets(20, 8, 8, 8);
+        cGbc.insets = new Insets(25, 10, 10, 10);
         card.add(btnConnect, cGbc);
 
         // Ação de conexão
@@ -193,13 +193,13 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         return panel;
     }
 
-    // --- PAINEL PRINCIPAL DO JOGO ---
+    // --- PAINEL PRINCIPAL DO JOGO (QUIZ) ---
     private JPanel createGamePanel() {
         JPanel panel = new JPanel(new BorderLayout(15, 15));
         panel.setBackground(BG_DARK);
         panel.setBorder(new EmptyBorder(25, 25, 25, 25));
 
-        // Cabeçalho: Info do Jogador e Timer
+        // Cabeçalho: Info do Jogador
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(BG_DARK);
 
@@ -208,40 +208,54 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         lblPlayerInfo.setForeground(TEXT_WHITE);
         headerPanel.add(lblPlayerInfo, BorderLayout.WEST);
 
-        lblTimer = new JLabel("--", JLabel.RIGHT);
-        lblTimer.setFont(FONT_TIMER);
-        lblTimer.setForeground(ACCENT_BLUE);
-        headerPanel.add(lblTimer, BorderLayout.EAST);
-
         panel.add(headerPanel, BorderLayout.NORTH);
 
-        // Centro: Pergunta
-        JPanel questionPanel = new JPanel(new BorderLayout());
-        questionPanel.setBackground(CARD_BG);
-        questionPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BUTTON_BG, 1),
-                new EmptyBorder(30, 20, 30, 20)
-        ));
+        // Centro: Pergunta e Timer Centralizado
+        JPanel centerContainer = new JPanel(new GridBagLayout());
+        centerContainer.setBackground(BG_DARK);
+        GridBagConstraints cGbc = new GridBagConstraints();
+        cGbc.fill = GridBagConstraints.BOTH;
+        cGbc.weightx = 1.0;
 
+        // Card da Pergunta
+        RoundedPanel questionCard = new RoundedPanel(new BorderLayout(), CARD_BG);
+        questionCard.setBorder(new EmptyBorder(30, 20, 30, 20));
+        
         lblQuestion = new JLabel("Aguardando início do jogo pelo administrador...", JLabel.CENTER);
         lblQuestion.setFont(FONT_TITLE);
         lblQuestion.setForeground(TEXT_WHITE);
-        questionPanel.add(lblQuestion, BorderLayout.CENTER);
+        questionCard.add(lblQuestion, BorderLayout.CENTER);
 
-        panel.add(questionPanel, BorderLayout.CENTER);
+        cGbc.gridy = 0;
+        cGbc.weighty = 0.6;
+        cGbc.insets = new Insets(0, 0, 15, 0);
+        centerContainer.add(questionCard, cGbc);
 
-        // Inferior: Opções e Status da Submissão
+        // Timer Monumental Ticking
+        lblTimer = new JLabel("--", JLabel.CENTER);
+        lblTimer.setFont(FONT_TIMER);
+        lblTimer.setForeground(ACCENT_BLUE);
+        
+        cGbc.gridy = 1;
+        cGbc.weighty = 0.4;
+        cGbc.insets = new Insets(5, 0, 5, 0);
+        centerContainer.add(lblTimer, cGbc);
+
+        panel.add(centerContainer, BorderLayout.CENTER);
+
+        // Inferior: Opções do Kahoot
         JPanel footerPanel = new JPanel(new BorderLayout(10, 10));
         footerPanel.setBackground(BG_DARK);
 
-        // Grid de Opções (2x2)
-        JPanel optionsGrid = new JPanel(new GridLayout(2, 2, 15, 15));
+        // Grid de Opções (2x2) de tamanho massivo (Fitts's Law)
+        JPanel optionsGrid = new JPanel(new GridLayout(2, 2, 20, 20));
         optionsGrid.setBackground(BG_DARK);
+        optionsGrid.setPreferredSize(new Dimension(800, 250)); // Altura enorme dos botões
 
         btnOptions = new JButton[4];
+        Color[] optionColors = { RED_COLOR, BLUE_COLOR, YELLOW_COLOR, GREEN_COLOR };
         for (int i = 0; i < 4; i++) {
-            btnOptions[i] = new JButton();
-            styleButton(btnOptions[i], BUTTON_BG, TEXT_WHITE);
+            btnOptions[i] = new RoundedButton("", optionColors[i]);
             btnOptions[i].setFont(FONT_SUBTITLE);
             btnOptions[i].setEnabled(false);
             final int index = i;
@@ -250,7 +264,7 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         }
         footerPanel.add(optionsGrid, BorderLayout.CENTER);
 
-        // Barra de Status
+        // Barra de Status de envio
         lblGameStatus = new JLabel("Selecione a alternativa correta contra o relógio!", JLabel.CENTER);
         lblGameStatus.setFont(FONT_BODY);
         lblGameStatus.setForeground(TEXT_MUTED);
@@ -272,13 +286,9 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.BOTH;
 
-        // Bloco Principal de Feedback
-        JPanel feedbackCard = new JPanel(new GridBagLayout());
-        feedbackCard.setBackground(CARD_BG);
-        feedbackCard.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BUTTON_BG, 1),
-                new EmptyBorder(20, 30, 20, 30)
-        ));
+        // Card Principal de Feedback (Arredondado)
+        RoundedPanel feedbackCard = new RoundedPanel(new GridBagLayout(), CARD_BG);
+        feedbackCard.setBorder(new EmptyBorder(25, 30, 25, 30));
 
         GridBagConstraints fGbc = new GridBagConstraints();
         fGbc.insets = new Insets(8, 8, 8, 8);
@@ -304,23 +314,19 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         gbc.weighty = 0.3;
         panel.add(feedbackCard, gbc);
 
-        // Bloco de Placar Liderança (Leaderboard)
-        JPanel leaderboardCard = new JPanel(new BorderLayout(5, 5));
-        leaderboardCard.setBackground(CARD_BG);
-        leaderboardCard.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BUTTON_BG, 1),
-                new EmptyBorder(15, 20, 15, 20)
-        ));
+        // Bloco de Placar de Liderança (Arredondado)
+        RoundedPanel leaderboardCard = new RoundedPanel(new BorderLayout(5, 5), CARD_BG);
+        leaderboardCard.setBorder(new EmptyBorder(20, 25, 20, 25));
 
         JLabel lblLdbTitle = new JLabel("Classificação Geral da Partida", JLabel.CENTER);
         lblLdbTitle.setFont(FONT_SUBTITLE);
         lblLdbTitle.setForeground(ACCENT_BLUE);
-        lblLdbTitle.setBorder(new EmptyBorder(0, 0, 10, 0));
+        lblLdbTitle.setBorder(new EmptyBorder(0, 0, 15, 0));
         leaderboardCard.add(lblLdbTitle, BorderLayout.NORTH);
 
         leaderboardModel = new DefaultListModel<>();
         listLeaderboard = new JList<>(leaderboardModel);
-        listLeaderboard.setBackground(BUTTON_BG);
+        listLeaderboard.setBackground(CARD_BG);
         listLeaderboard.setForeground(TEXT_WHITE);
         listLeaderboard.setFont(FONT_BODY);
         listLeaderboard.setSelectionBackground(ACCENT_BLUE);
@@ -335,15 +341,16 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         gbc.weighty = 0.5;
         panel.add(leaderboardCard, gbc);
 
-        // Botão Informativo (Sem ação de avanço manual)
-        btnNextMock = new JButton("Aguardando próxima rodada...");
-        styleButton(btnNextMock, ACCENT_BLUE, TEXT_WHITE);
-        btnNextMock.setEnabled(false);
+        // Botão Informativo de transição (Não clicável)
+        btnNextRound = new RoundedButton("Aguardando próxima rodada...", ACCENT_BLUE);
+        btnNextRound.setForeground(BG_DARK);
+        btnNextRound.setFont(FONT_SUBTITLE);
+        btnNextRound.setEnabled(false);
         
         gbc.gridy = 2;
         gbc.weighty = 0.1;
         gbc.fill = GridBagConstraints.NONE;
-        panel.add(btnNextMock, gbc);
+        panel.add(btnNextRound, gbc);
 
         return panel;
     }
@@ -377,6 +384,7 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
     }
 
     private void handleSelectAnswer(int optionIndex) {
+        // Desativa cliques adicionais
         for (JButton btn : btnOptions) {
             btn.setEnabled(false);
         }
@@ -390,10 +398,13 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         }
 
         selectedAnswer = answerChar;
-        btnOptions[optionIndex].setBackground(ACCENT_BLUE);
-        btnOptions[optionIndex].setForeground(BG_DARK);
+        
+        // Aplica o feedback visual de clique (borda espessa no botão selecionado)
+        if (btnOptions[optionIndex] instanceof RoundedButton) {
+            ((RoundedButton) btnOptions[optionIndex]).setSelected(true);
+        }
 
-        lblGameStatus.setText("Resposta '" + selectedAnswer + "' enviada via TCP!");
+        lblGameStatus.setText("Resposta '" + selectedAnswer + "' registrada! Enviando via TCP...");
         socketManager.sendAnswer(selectedAnswer);
     }
 
@@ -430,8 +441,9 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
 
             for (JButton btn : btnOptions) {
                 btn.setEnabled(true);
-                btn.setBackground(BUTTON_BG);
-                btn.setForeground(TEXT_WHITE);
+                if (btn instanceof RoundedButton) {
+                    ((RoundedButton) btn).setSelected(false);
+                }
             }
             cardLayout.show(mainPanel, "GAME");
         });
@@ -496,50 +508,120 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         });
     }
 
-    // --- MÉTODOS DE ESTILIZAÇÃO VISUAL (DESIGN PREMIUM) ---
-    private void styleTextField(JTextField field) {
-        field.setBackground(BUTTON_BG);
-        field.setForeground(TEXT_WHITE);
-        field.setCaretColor(TEXT_WHITE);
-        field.setFont(FONT_BODY);
-        field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BUTTON_BG, 2),
-                BorderFactory.createEmptyBorder(8, 10, 8, 10)
-        ));
+    // --- COMPONENTES ARREDONDADOS E ESTILIZADOS PERSONALIZADOS (UI PREMIUM) ---
+    
+    // 1. Painel com Cantos Arredondados
+    private static class RoundedPanel extends JPanel {
+        private final int cornerRadius = 25;
+        private final Color bgColor;
+
+        public RoundedPanel(LayoutManager layout, Color bgColor) {
+            super(layout);
+            this.bgColor = bgColor;
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(bgColor);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius);
+            
+            // Desenha contorno fino sutil
+            g2.setColor(new Color(255, 255, 255, 15));
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, cornerRadius, cornerRadius);
+            g2.dispose();
+            super.paintComponent(g);
+        }
     }
 
-    private void styleButton(JButton button, Color bg, Color fg) {
-        button.setBackground(bg);
-        button.setForeground(fg);
-        button.setFont(FONT_BODY);
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(bg, 1),
-                BorderFactory.createEmptyBorder(12, 20, 12, 20)
-        ));
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    // 2. Campo de Texto Arredondado
+    private static class RoundedTextField extends JTextField {
+        private final int cornerRadius = 15;
+        private final Color bgColor;
 
-        button.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                if (button.isEnabled()) {
-                    if (bg.equals(BUTTON_BG)) {
-                        button.setBackground(BUTTON_HOVER);
-                    } else {
-                        button.setBackground(bg.brighter());
-                    }
-                }
-            }
+        public RoundedTextField(String text, Color bg) {
+            super(text);
+            this.bgColor = bg;
+            setOpaque(false);
+            setCaretColor(Color.WHITE);
+            setForeground(Color.WHITE);
+            setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        }
 
-            @Override
-            public void mouseExited(MouseEvent e) {
-                if (button.isEnabled()) {
-                    button.setBackground(bg);
-                }
-            }
-        });
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(bgColor);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius);
+            g2.dispose();
+            super.paintComponent(g);
+        }
     }
 
+    // 3. Botão com Cantos Arredondados e Efeitos Visuais
+    private static class RoundedButton extends JButton {
+        private final Color normalBg;
+        private final Color hoverBg;
+        private final Color pressedBg;
+        private final int cornerRadius = 20;
+        private boolean selected = false;
+
+        public RoundedButton(String text, Color bg) {
+            super(text);
+            this.normalBg = bg;
+            this.hoverBg = bg.brighter();
+            this.pressedBg = bg.darker();
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setOpaque(false);
+            setForeground(Color.WHITE);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+        }
+
+        public void setSelected(boolean selected) {
+            this.selected = selected;
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            if (!isEnabled()) {
+                if (selected) {
+                    g2.setColor(normalBg);
+                } else {
+                    // Opacidade reduzida para botões não selecionados
+                    g2.setColor(new Color(normalBg.getRed(), normalBg.getGreen(), normalBg.getBlue(), 80));
+                }
+            } else if (getModel().isPressed()) {
+                g2.setColor(pressedBg);
+            } else if (getModel().isRollover()) {
+                g2.setColor(hoverBg);
+            } else {
+                g2.setColor(normalBg);
+            }
+            
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius);
+            
+            // Contorno de destaque branco no botão selecionado
+            if (selected) {
+                g2.setColor(Color.WHITE);
+                g2.setStroke(new BasicStroke(4));
+                g2.drawRoundRect(2, 2, getWidth() - 4, getHeight() - 4, cornerRadius, cornerRadius);
+            }
+            
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+
+    // --- RENDERIZADOR PERSONALIZADO PARA LISTA DE LIDERANÇA ---
     private class LeaderboardCellRenderer extends JPanel implements ListCellRenderer<String> {
         private final JLabel lblRank = new JLabel();
         private final JLabel lblName = new JLabel();
@@ -621,5 +703,3 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         }
     }
 }
-
-
