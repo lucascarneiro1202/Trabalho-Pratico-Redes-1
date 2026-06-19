@@ -1,0 +1,5 @@
+GEMINI.md
+
+# Ignorar binários compilados do Java
+*.class
+**/*.class

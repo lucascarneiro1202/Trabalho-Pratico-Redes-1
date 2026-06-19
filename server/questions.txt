@@ -1,0 +1,5 @@
+Qual camada do modelo OSI é responsável pelo roteamento de pacotes?|A) Física|B) Enlace|C) Rede|D) Transporte|C
+Qual protocolo da camada de transporte oferece garantia de entrega?|A) UDP|B) IP|C) TCP|D) DNS|C
+Qual a porta padrão utilizada para o protocolo HTTP?|A) 443|B) 80|C) 21|D) 22|B
+Qual das seguintes alternativas representa um endereço IP privado válido?|A) 8.8.8.8|B) 192.168.1.5|C) 200.18.90.1|D) 100.64.0.0|B
+
