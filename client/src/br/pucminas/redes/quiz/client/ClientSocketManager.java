@@ -39,9 +39,19 @@ public class ClientSocketManager {
         this.nickname = nickname;
         new Thread(() -> {
             try {
-                // 1. Abre porta UDP efêmera/aleatória para escutar o cronômetro
-                udpSocket = new DatagramSocket();
-                int localUdpPort = udpSocket.getLocalPort();
+                // 1. Abre porta UDP fixa (padrão: 12346) para escutar o cronômetro
+                int localUdpPort = 12346;
+                while (true) {
+                    try {
+                        udpSocket = new DatagramSocket(localUdpPort);
+                        break;
+                    } catch (java.net.SocketException e) {
+                        localUdpPort++; // Tenta a próxima porta se a padrão estiver em uso
+                        if (localUdpPort > 12360) {
+                            throw e; // Limita a busca para evitar loop infinito
+                        }
+                    }
+                }
                 System.out.println("[CLIENT] Escutando timer na porta UDP local: " + localUdpPort);
 
                 // 2. Estabelece a conexão TCP
