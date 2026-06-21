@@ -251,11 +251,16 @@ public class ServerWindow extends JFrame {
         gbc.weighty = 0.6;
         panel.add(leaderboardCard, gbc);
 
-        // Botão Avançar Rodada
+        // Botão Avançar Rodada (ou Reiniciar no final)
         btnNextRound = new RoundedButton("Carregando próxima pergunta...", ACCENT_BLUE);
         btnNextRound.setForeground(BG_DARK);
         btnNextRound.setFont(FONT_SUBTITLE);
         btnNextRound.setEnabled(false);
+        btnNextRound.addActionListener(e -> {
+            if ("Reiniciar Partida".equals(btnNextRound.getText())) {
+                ServerMain.resetServer();
+            }
+        });
         
         gbc.gridy = 2;
         gbc.weighty = 0.2;
@@ -321,8 +326,8 @@ public class ServerWindow extends JFrame {
 
             if (isGameOver) {
                 lblResultTitle.setText("RESULTADO FINAL!");
-                btnNextRound.setText("Quiz Finalizado");
-                btnNextRound.setEnabled(false);
+                btnNextRound.setText("Reiniciar Partida");
+                btnNextRound.setEnabled(true);
             } else {
                 lblResultTitle.setText("Classificação da Rodada");
                 btnNextRound.setText("Próxima Pergunta carregando...");
@@ -330,6 +335,13 @@ public class ServerWindow extends JFrame {
             }
 
             cardLayout.show(mainPanel, "RESULT");
+        });
+    }
+
+    public void resetToLobby() {
+        SwingUtilities.invokeLater(() -> {
+            updateLobbyPlayers();
+            cardLayout.show(mainPanel, "LOBBY");
         });
     }
 

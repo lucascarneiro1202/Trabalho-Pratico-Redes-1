@@ -45,7 +45,7 @@ Tanto o Cliente (`QuizWindow.java`) quanto o Servidor (`ServerWindow.java`) util
 *   **Interface do Servidor (Painel de Controle):**
     *   **Lobby/Espera:** Permite ver em tempo real a lista de jogadores conectados e iniciar a partida com o clique de um botão.
     *   **Acompanhamento da Rodada:** Mostra a pergunta atual, o cronômetro regressivo gigante e um checklist dinâmico com o status de resposta de cada jogador (Pendente / OK).
-    *   **Painel de Ranking:** Exibe o ranking acumulado a cada rodada e destaca o pódio com cores personalizadas e ícones de medalha (🥇, 🥈, 🥉).
+    *   **Painel de Ranking:** Exibe o ranking acumulado a cada rodada e destaca o pódio com cores personalizadas.
 *   **Interface do Cliente (Jogabilidade):**
     *   **Telas Fluídas:** Transição contínua via `CardLayout` para fluxos de Login, Espera pelo início do jogo, Pergunta Ativa, Feedback da resposta individual e Placar da rodada.
 

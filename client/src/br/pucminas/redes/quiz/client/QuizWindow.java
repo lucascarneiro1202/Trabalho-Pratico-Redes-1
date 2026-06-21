@@ -491,7 +491,20 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
     public void onConnected() {
         SwingUtilities.invokeLater(() -> {
             lblPlayerInfo.setText("Jogador: " + txtName.getText().trim() + " | Pontos: 0");
+            lblQuestion.setText("Aguardando início do jogo pelo administrador...");
+            lblTimer.setText("--");
+            lblTimer.setForeground(ACCENT_BLUE);
+            selectedAnswer = "";
             lblGameStatus.setText("Conectado com sucesso! Aguardando o início do jogo...");
+            
+            for (JButton btn : btnOptions) {
+                btn.setText("");
+                btn.setEnabled(false);
+                if (btn instanceof RoundedButton) {
+                    ((RoundedButton) btn).setSelected(false);
+                }
+            }
+            
             cardLayout.show(mainPanel, "GAME");
         });
     }

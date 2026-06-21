@@ -38,14 +38,14 @@ public class ServerMain {
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
                 System.out.println("[INFO] Escutando conexões TCP na porta: " + PORT);
-                while (!gameStarted) {
+                while (true) {
                     Socket socket = serverSocket.accept();
                     if (gameStarted) {
-                        socket.close();
-                        break;
+                        socket.close(); // Recusa novas conexões se a partida já começou
+                    } else {
+                        ClientHandler handler = new ClientHandler(socket);
+                        handler.start();
                     }
-                    ClientHandler handler = new ClientHandler(socket);
-                    handler.start();
                 }
             } catch (IOException e) {
                 System.err.println("[ERRO] Exceção no servidor TCP: " + e.getMessage());
@@ -275,6 +275,17 @@ public class ServerMain {
             window.updateLobbyPlayers();
             window.updateGamePlayerStatus();
         }
+    }
+
+    public static void resetServer() {
+        gameStarted = false;
+        synchronized (clients) {
+            clients.clear();
+        }
+        if (window != null) {
+            window.resetToLobby();
+        }
+        System.out.println("[INFO] Servidor reiniciado. Pronto para novas conexões.");
     }
 }
 
