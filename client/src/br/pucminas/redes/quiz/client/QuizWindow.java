@@ -54,6 +54,12 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
     private DefaultListModel<String> leaderboardModel;
     private JButton btnNextRound;
 
+    // Componentes da Tela de Fim de Jogo
+    private JLabel lblGameOverTitle;
+    private JList<String> listGameOverLeaderboard;
+    private DefaultListModel<String> gameOverModel;
+    private JButton btnBackToMenu;
+
     // Controlador de Rede
     private ClientSocketManager socketManager;
     private String selectedAnswer = "";
@@ -84,10 +90,12 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         JPanel loginPanel = createLoginPanel();
         JPanel gamePanel = createGamePanel();
         JPanel resultPanel = createResultPanel();
+        JPanel gameOverPanel = createGameOverPanel();
 
         mainPanel.add(loginPanel, "LOGIN");
         mainPanel.add(gamePanel, "GAME");
         mainPanel.add(resultPanel, "RESULT");
+        mainPanel.add(gameOverPanel, "GAME_OVER");
 
         add(mainPanel);
 
@@ -355,6 +363,76 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
         return panel;
     }
 
+    // --- PAINEL DE FIM DE JOGO ---
+    private JPanel createGameOverPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(BG_DARK);
+        panel.setBorder(new EmptyBorder(25, 25, 25, 25));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.BOTH;
+
+        // Card Cabeçalho do Fim de Jogo
+        RoundedPanel headerCard = new RoundedPanel(new GridBagLayout(), CARD_BG);
+        headerCard.setBorder(new EmptyBorder(20, 30, 20, 30));
+
+        lblGameOverTitle = new JLabel("FIM DO QUIZ!", JLabel.CENTER);
+        lblGameOverTitle.setFont(FONT_TITLE);
+        lblGameOverTitle.setForeground(DANGER_RED);
+        headerCard.add(lblGameOverTitle);
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.2;
+        panel.add(headerCard, gbc);
+
+        // Bloco de Placar Final
+        RoundedPanel leaderboardCard = new RoundedPanel(new BorderLayout(5, 5), CARD_BG);
+        leaderboardCard.setBorder(new EmptyBorder(20, 25, 20, 25));
+
+        JLabel lblLdbTitle = new JLabel("Classificação Final da Partida", JLabel.CENTER);
+        lblLdbTitle.setFont(FONT_SUBTITLE);
+        lblLdbTitle.setForeground(ACCENT_BLUE);
+        lblLdbTitle.setBorder(new EmptyBorder(0, 0, 15, 0));
+        leaderboardCard.add(lblLdbTitle, BorderLayout.NORTH);
+
+        gameOverModel = new DefaultListModel<>();
+        listGameOverLeaderboard = new JList<>(gameOverModel);
+        listGameOverLeaderboard.setBackground(CARD_BG);
+        listGameOverLeaderboard.setForeground(TEXT_WHITE);
+        listGameOverLeaderboard.setFont(FONT_BODY);
+        listGameOverLeaderboard.setSelectionBackground(ACCENT_BLUE);
+        listGameOverLeaderboard.setSelectionForeground(BG_DARK);
+        listGameOverLeaderboard.setCellRenderer(new LeaderboardCellRenderer());
+
+        JScrollPane scrollPane = new JScrollPane(listGameOverLeaderboard);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        leaderboardCard.add(scrollPane, BorderLayout.CENTER);
+
+        gbc.gridy = 1;
+        gbc.weighty = 0.6;
+        panel.add(leaderboardCard, gbc);
+
+        // Botão Voltar ao Menu
+        btnBackToMenu = new RoundedButton("Voltar ao Menu Principal", ACCENT_BLUE);
+        btnBackToMenu.setForeground(BG_DARK);
+        btnBackToMenu.setFont(FONT_SUBTITLE);
+        btnBackToMenu.addActionListener(e -> {
+            btnConnect.setEnabled(true);
+            btnConnect.setText("Conectar e Jogar");
+            cardLayout.show(mainPanel, "LOGIN");
+        });
+
+        gbc.gridy = 2;
+        gbc.weighty = 0.2;
+        gbc.fill = GridBagConstraints.NONE;
+        panel.add(btnBackToMenu, gbc);
+
+        return panel;
+    }
+
     // --- TRATAMENTO DOS INPUTS E AÇÕES ---
     private void handleConnect() {
         String nickname = txtName.getText().trim();
@@ -491,10 +569,14 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
     @Override
     public void onGameOver(String finalRanking) {
         SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(this, "FIM DO QUIZ!\n\n" + finalRanking, "Resultado Final", JOptionPane.INFORMATION_MESSAGE);
-            btnConnect.setEnabled(true);
-            btnConnect.setText("Conectar e Jogar");
-            cardLayout.show(mainPanel, "LOGIN");
+            gameOverModel.clear();
+            String[] lines = finalRanking.split("\n");
+            for (String line : lines) {
+                if (!line.trim().isEmpty()) {
+                    gameOverModel.addElement(line);
+                }
+            }
+            cardLayout.show(mainPanel, "GAME_OVER");
         });
     }
 
@@ -660,20 +742,17 @@ public class QuizWindow extends JFrame implements ClientSocketManager.GameEventL
                     score = value.substring(parenIdx + 2, ptsIdx) + " pts";
                 }
                 
+                lblRank.setText("   " + rank);
                 if (index == 0) {
-                    lblRank.setText("🥇 " + rank);
                     lblRank.setForeground(new Color(249, 226, 175)); // Ouro
                     setBackground(new Color(69, 71, 90)); // Destaque escuro
                 } else if (index == 1) {
-                    lblRank.setText("🥈 " + rank);
                     lblRank.setForeground(new Color(186, 194, 222)); // Prata
                     setBackground(new Color(55, 57, 80));
                 } else if (index == 2) {
-                    lblRank.setText("🥉 " + rank);
                     lblRank.setForeground(new Color(243, 139, 168)); // Bronze
                     setBackground(new Color(49, 50, 68));
                 } else {
-                    lblRank.setText("   " + rank);
                     lblRank.setForeground(TEXT_MUTED);
                     setBackground(new Color(30, 30, 46));
                 }

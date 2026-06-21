@@ -453,20 +453,17 @@ public class ServerWindow extends JFrame {
                     score = value.substring(parenIdx + 2, ptsIdx) + " pts";
                 }
                 
+                lblRank.setText("   " + rank);
                 if (index == 0) {
-                    lblRank.setText("🥇 " + rank);
                     lblRank.setForeground(new Color(249, 226, 175)); // Ouro
                     setBackground(new Color(69, 71, 90));
                 } else if (index == 1) {
-                    lblRank.setText("🥈 " + rank);
                     lblRank.setForeground(new Color(186, 194, 222)); // Prata
                     setBackground(new Color(55, 57, 80));
                 } else if (index == 2) {
-                    lblRank.setText("🥉 " + rank);
                     lblRank.setForeground(new Color(243, 139, 168)); // Bronze
                     setBackground(new Color(49, 50, 68));
                 } else {
-                    lblRank.setText("   " + rank);
                     lblRank.setForeground(TEXT_MUTED);
                     setBackground(new Color(30, 30, 46));
                 }
