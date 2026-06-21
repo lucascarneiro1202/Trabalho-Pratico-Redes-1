@@ -28,7 +28,8 @@ O código está dividido de forma independente para facilitar a compilação iso
 │           └── server/         # Orquestrador do Jogo e Threads do Servidor
 │               ├── ClientHandler.java
 │               ├── QuizTimer.java
-│               └── ServerMain.java
+│               ├── ServerMain.java
+│               └── ServerWindow.java
 ├── Dockerfile                  # Empacotamento do ambiente Java 17 + X11
 ├── Makefile                    # Automação de tarefas para Unix (Linux/macOS)
 ├── GEMINI.md                   # Documentação interna de contexto
@@ -39,10 +40,14 @@ O código está dividido de forma independente para facilitar a compilação iso
 
 ## 🎨 Interface Gráfica (Java Swing)
 
-A interface do Cliente em `QuizWindow.java` foi desenvolvida utilizando a biblioteca gráfica nativa **Java Swing**, adotando práticas de design modernas:
-*   **CardLayout:** Usado para gerenciar e alternar telas sem abrir novas janelas. As transições cobrem: **Login/Conexão**, **Jogo (Pergunta + Opções + Timer)** e **Resultado da Rodada**.
-*   **Estilização Premium:** Visual no estilo *Dark Mode* utilizando paleta de cores personalizada com efeitos visuais dinâmicos de *hover* nos botões.
-*   **Leaderboard Customizado:** A exibição de pontuação utiliza a classe `LeaderboardCellRenderer`, que renderiza linhas personalizadas com cores para o pódio e fundos com cores diferenciadas.
+Tanto o Cliente (`QuizWindow.java`) quanto o Servidor (`ServerWindow.java`) utilizam a biblioteca gráfica nativa **Java Swing**, adotando práticas de design modernas com um visual unificado:
+*   **Design Unificado (Dracula Palette):** Ambos os aplicativos compartilham a mesma paleta de cores escura e de alto contraste, com botões arredondados personalizados e efeitos dinâmicos de *hover*.
+*   **Interface do Servidor (Painel de Controle):**
+    *   **Lobby/Espera:** Permite ver em tempo real a lista de jogadores conectados e iniciar a partida com o clique de um botão.
+    *   **Acompanhamento da Rodada:** Mostra a pergunta atual, o cronômetro regressivo gigante e um checklist dinâmico com o status de resposta de cada jogador (Pendente / OK).
+    *   **Painel de Ranking:** Exibe o ranking acumulado a cada rodada e destaca o pódio com cores personalizadas e ícones de medalha (🥇, 🥈, 🥉).
+*   **Interface do Cliente (Jogabilidade):**
+    *   **Telas Fluídas:** Transição contínua via `CardLayout` para fluxos de Login, Espera pelo início do jogo, Pergunta Ativa, Feedback da resposta individual e Placar da rodada.
 
 ---
 
@@ -110,19 +115,19 @@ Abra dois terminais na raiz do projeto e execute os comandos:
 
 ### Opção 2: Execução via Docker (Recomendado para Linux)
 
-O Docker garante a padronização das versões da JDK no ambiente de desenvolvimento.
+O Docker garante a padronização das versões da JDK no ambiente de desenvolvimento. Ambas as imagens agora suportam redirecionamento X11 para renderizar a interface gráfica localmente.
 
 1.  **Construir a Imagem:**
     ```bash
     make build-image
     ```
-2.  **Iniciar o Servidor:**
+2.  **Iniciar o Servidor (com GUI redirecionada para o Host):**
     ```bash
     make run-server-docker
     ```
-3.  **Iniciar o Cliente (Linux com servidor gráfico X11 habilitado):**
+3.  **Iniciar o Cliente (com GUI redirecionada para o Host):**
     ```bash
     make run-client-docker
     ```
 
-> Para testar o cliente via Docker no Windows ou macOS, é necessário configurar um servidor X11 externo (como *VcXsrv* no Windows ou *XQuartz* no macOS) para receber a tela. Por conta disso, **a Opção 1 (Execução Local)** é a recomendada para membros do grupo com estes sistemas operacionais.
+> Para testar os aplicativos via Docker no Windows ou macOS, é necessário configurar um servidor X11 externo (como *VcXsrv* no Windows ou *XQuartz* no macOS) para receber a tela. Por conta disso, **a Opção 1 (Execução Local)** é a recomendada para membros do grupo com estes sistemas operacionais.

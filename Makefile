@@ -35,7 +35,8 @@ run-client-docker:
 	sudo docker run -it --rm --net=host -e DISPLAY=$${DISPLAY} -v /tmp/.X11-unix:/tmp/.X11-unix quiz-app
 
 run-server-docker:
-	sudo docker run -it --rm --net=host quiz-app java -cp server/src br.pucminas.redes.quiz.server.ServerMain
+	xhost +local:docker
+	sudo docker run -it --rm --net=host -e DISPLAY=$${DISPLAY} -v /tmp/.X11-unix:/tmp/.X11-unix quiz-app java -cp server/src br.pucminas.redes.quiz.server.ServerMain
 
 clean:
 	find . -name "*.class" -type f -delete

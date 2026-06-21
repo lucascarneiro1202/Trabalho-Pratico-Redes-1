@@ -49,6 +49,9 @@ public class QuizTimer extends Thread {
                         }
                     }
                 }
+                if (ServerMain.window != null) {
+                    ServerMain.window.updateTimer(sec);
+                }
 
                 // Dorme por 1 segundo entre envios
                 Thread.sleep(1000);

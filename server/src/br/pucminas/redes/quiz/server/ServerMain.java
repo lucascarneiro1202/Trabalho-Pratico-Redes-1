@@ -9,6 +9,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
+import javax.swing.SwingUtilities;
+
 public class ServerMain {
     private static final int PORT = 12345;
     private static final int TIMER_DURATION = 15; // Segundos por pergunta
@@ -16,6 +18,7 @@ public class ServerMain {
     private static final List<String[]> questions = new ArrayList<>();
     private static boolean gameStarted = false;
     private static QuizTimer activeTimer;
+    public static ServerWindow window;
 
 
     public static void main(String[] args) {
@@ -49,31 +52,27 @@ public class ServerMain {
             }
         }).start();
 
-        // 3. Lobby do Administrador
-        System.out.println("\n[LOBBY] Aguardando conexões dos jogadores...");
-        System.out.println("[LOBBY] Pressione ENTER neste terminal para COMEÇAR o Quiz!\n");
+        // 3. Inicializar a Interface Gráfica do Servidor (Painel do Administrador)
+        SwingUtilities.invokeLater(() -> {
+            window = new ServerWindow();
+            window.setVisible(true);
+            System.out.println("[INFO] Interface gráfica do servidor carregada.");
+        });
+    }
 
-        try (Scanner scanner = new Scanner(System.in)) {
-            scanner.nextLine(); // Trava até dar enter
-        }
+    public static void startGameLoop() {
+        new Thread(() -> {
+            gameStarted = true;
+            System.out.println("[GAME] Partida iniciada!");
 
-        synchronized (clients) {
-            if (clients.isEmpty()) {
-                System.out.println("[LOBBY] Nenhum jogador conectado. Abortando partida.");
-                System.exit(0);
+            // Loop de Rodadas
+            for (int i = 0; i < questions.size(); i++) {
+                runRound(i);
             }
-        }
 
-        gameStarted = true;
-        System.out.println("[GAME] Iniciando a partida!");
-
-        // 4. Loop de Rodadas
-        for (int i = 0; i < questions.size(); i++) {
-            runRound(i);
-        }
-
-        // 5. Finalizar Partida e Enviar Rankings
-        finishGame();
+            // Finalizar Partida e Enviar Rankings
+            finishGame();
+        }).start();
     }
 
     private static void loadQuestions(String path) {
@@ -103,6 +102,11 @@ public class ServerMain {
         System.out.println("\n-----------------------------------------");
         System.out.println("RODADA " + (qIdx + 1) + ": " + questionText);
         System.out.println("-----------------------------------------");
+
+        // Atualiza a tela de controle do jogo no Administrador
+        if (window != null) {
+            window.showQuestion(questionText, qIdx + 1);
+        }
 
         // Reseta estado de respostas da rodada para todos os clientes
         synchronized (clients) {
@@ -163,9 +167,15 @@ public class ServerMain {
                 }
             }
 
-            // Envia o ranking atualizado da rodada para todos os clientes
+            // Envia o ranking atualizado da rodada para todos os clientes e painel do administrador
             String scoreboard = generateScoreboard();
             System.out.println("\n[PLACAR ATUAL]\n" + scoreboard);
+            
+            if (window != null) {
+                boolean isGameOver = (qIdx == questions.size() - 1);
+                window.showLeaderboard(scoreboard, isGameOver);
+            }
+
             for (ClientHandler client : clients) {
                 GameMessage boardMsg = new GameMessage(GameMessage.Type.ROUND_RESULT, "SCOREBOARD");
                 boardMsg.setExtraData(scoreboard);
@@ -246,12 +256,25 @@ public class ServerMain {
         }
     }
 
+    public static List<ClientHandler> getClientsList() {
+        synchronized (clients) {
+            return new ArrayList<>(clients);
+        }
+    }
+
     public static void addClient(ClientHandler client) {
         clients.add(client);
+        if (window != null) {
+            window.updateLobbyPlayers();
+        }
     }
 
     public static void removeClient(ClientHandler client) {
         clients.remove(client);
+        if (window != null) {
+            window.updateLobbyPlayers();
+            window.updateGamePlayerStatus();
+        }
     }
 }
 

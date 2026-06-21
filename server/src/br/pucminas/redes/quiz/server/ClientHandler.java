@@ -110,6 +110,9 @@ public class ClientHandler extends Thread {
                     this.answeredThisRound = true;
                     System.out.println("[SERVER] '" + nickname + "' respondeu: " + currentAnswer);
                     ServerMain.checkAllAnswered();
+                    if (ServerMain.window != null) {
+                        ServerMain.window.updateGamePlayerStatus();
+                    }
                 }
                 break;
             default:
