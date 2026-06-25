@@ -31,35 +31,49 @@ Tanto o cliente (`QuizWindow`) quanto o servidor (`ServerWindow`) utilizam Java 
 
 ## Modelagem e Configuração da Rede (Cisco Packet Tracer)
 A rede simula um ambiente corporativo/residencial com três roteadores ligados em cascata e mascaramento NAT nas bordas.
-
-### Topologia Física e Lógica (Esquema ASCII)
 ```text
-[ PC 1 (Cliente) ] (Rede R1: 192.168.0.0/16)
-       │ (Wi-Fi / LAN)
-┌──────┴──────┐ IP LAN: 192.168.0.1
-│ Roteador R1 │ (Gateway do PC 1)
-└──────┬──────┘ IP LAN 1: 192.168.0.10
-       │ Cabo RJ45 (Par trançado)
-┌──────┴──────┐ IP WAN: 192.168.0.2 (Recebe IP de R1 via DHCP/Estático)
-│ Roteador R2 │ (Rede R2 LAN: 172.16.0.0/12)
-└──────┬──────┘ IP LAN 1: 172.16.0.1
-       │ Cabo RJ45 (Par trançado)
-┌──────┴──────┐ IP WAN: 172.16.0.2 (Recebe IP de R2)
-│ Roteador R3 │ (Rede R3 LAN: 10.0.0.0/8)
-└──────┬──────┘ IP LAN: 10.0.0.1
-       │ (Wi-Fi / LAN)
-[ PC 2 (Servidor) ] IP IPSERV: 10.0.0.2 (Porta TCP: 12345 / UDP: 12346)
-```
+[ PC 1: 192.168.0.100 ]   [ PC 3: 192.168.0.10 ]
+          Jogador 1                 Jogador 2
+              │                         │
+              └───────────┬─────────────┘
+                          │ Sinal Wi-Fi
+                  ┌───────┴───────┐
+                  │ Access Point0 │
+                  └───────┬───────┘
+                          │ Cabo RJ45
+                  ┌───────┴───────┐
+                  │  Roteador R1  │  IP Interface LAN (Fa0/0): 192.168.0.1 (Gateway dos PCs)
+                  └───────┬───────┘
+                          │  IP Interface WAN (Fa0/1): 172.16.0.1
+                          │
+                          │  Cabo RJ45
+                          │
+                          │  IP Interface WAN (Fa0/1): 172.16.0.2
+                  ┌───────┴───────┐
+                  │  Roteador R2  │
+                  └───────┬───────┘  Mapeia 172.16.0.2:12345 (TCP) -> 10.0.0.100:80 (TCP)
+                          │  IP Interface LAN (Fa0/0): 10.0.0.1 (Gateway do Servidor)
+                          │
+                          │  Cabo RJ45
+                  ┌───────┴───────┐
+                  │ Access Point1 │
+                  └───────┬───────┘
+                          │ Sinal Wi-Fi
+                          │
+                  ┌───────┴───────┐
+                  │PC 2 (Servidor)│  IP Estático: 10.0.0.100 /8
+                  └───────────────┘  Porta de Aplicação Real: 12345 (TCP)
+``` 
 
 ### Tabela de Endereçamento IP
 | Dispositivo/Interface | Rede Lógica | Endereço IP / Máscara | Gateway Padrão |
 | :--- | :--- | :--- | :--- |
 | **PC 1 (Cliente)** | Rede R1 | `192.168.0.100 /16` | `192.168.0.1` |
+| **PC3 (cliente)** | Rede R1 | `192.168.0.10 /16` | `192.168.0.1` |
 | **Roteador R1 (LAN)** | Rede R1 | `192.168.0.1 /16` | N/A |
-| **Roteador R2 (WAN)** | Rede R1 | `192.168.0.2 /16` | `192.168.0.1` |
+|**Roteador R1 (wAN)** | Rede R1 | `172.16.0.1 /12` | N/A |
 | **Roteador R2 (LAN)** | Rede R2 | `172.16.0.1 /12` | N/A |
-| **Roteador R3 (WAN)** | Rede R2 | `172.16.0.2 /12` | `172.16.0.1` |
-| **Roteador R3 (LAN)** | Rede R3 | `10.0.0.1 /8` | N/A |
+| **Roteador R2 (WAN)** | Rede R2 | `192.168.0.2 /16` | N/A |
 | **PC 2 (Servidor)** | Rede R3 | `10.0.0.2 /8` | `10.0.0.1` |
 
 ### Configuração de Roteamento e Redirecionamento (NAT / Port Forwarding)
